@@ -1,0 +1,49 @@
+version: '3.9'
+
+services:
+  # MongoDB Database Service
+  mongo:
+    image: mongo:latest
+    restart: always
+    ports:
+      - '27017:27017'
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: 'root'
+      MONGO_INITDB_ROOT_PASSWORD: 'example'
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - shared-network
+  
+  # API Service
+  backend:
+    build: https://github.com/Language-Output-Generator/backend.git
+    ports:
+      - '3001:3001'
+    depends_on:
+      - mongo
+    environment:
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: true
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_URL: mongodb://root:example@mongo:27017/
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_SERVER: mongo
+    networks:
+      - shared-network
+
+  # Frontend Node service
+  frontend:
+    build: https://github.com/Language-Output-Generator/frontend.git
+    ports:
+      - '3000:3000'
+    depends_on:
+      - backend
+    networks:
+      - shared-network
+
+networks:
+  shared-network:
+
+volumes:
+  mongodb-data:
